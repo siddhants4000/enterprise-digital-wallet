@@ -13,6 +13,8 @@ import com.example.enterprise_digital_wallet.entity.TransactionStatus;
 import com.example.enterprise_digital_wallet.entity.TransactionType;
 import com.example.enterprise_digital_wallet.entity.WalletTransaction;
 import com.example.enterprise_digital_wallet.repository.TransactionRepository;
+import com.example.enterprise_digital_wallet.event.WalletEvent;
+import java.time.Instant;
 
 import java.util.UUID;
 
@@ -23,6 +25,8 @@ public class WalletServiceImpl implements WalletService {
     private final WalletRepository walletRepository;
 
     private final TransactionRepository transactionRepository;
+
+    private final WalletEventProducer walletEventProducer;
 
     @Override
     public WalletResponse getWalletByUserId(UUID userId) {
@@ -48,6 +52,19 @@ public class WalletServiceImpl implements WalletService {
                 .build();
 
         transactionRepository.save(transaction);
+
+        WalletEvent event = new WalletEvent(
+                "MONEY_DEPOSITED",
+                transaction.getId(),
+                null,
+                savedWallet.getUser().getId(),
+                transaction.getAmount(),
+                transaction.getCurrency(),
+                transaction.getReferenceNumber(),
+                Instant.now()
+        );
+
+        walletEventProducer.publishWalletEvent(event);
 
         return mapToWalletResponse(savedWallet);
     }
@@ -75,6 +92,19 @@ public class WalletServiceImpl implements WalletService {
                 .build();
 
         transactionRepository.save(transaction);
+
+        WalletEvent event = new WalletEvent(
+                "MONEY_WITHDRAWN",
+                transaction.getId(),
+                savedWallet.getUser().getId(),
+                null,
+                transaction.getAmount(),
+                transaction.getCurrency(),
+                transaction.getReferenceNumber(),
+                Instant.now()
+        );
+
+        walletEventProducer.publishWalletEvent(event);
 
         return mapToWalletResponse(savedWallet);
     }
