@@ -45,6 +45,9 @@ public class WalletTransaction {
     @Column(nullable = false, unique = true, length = 80)
     private String referenceNumber;
 
+    @Column(unique = true, length = 100)
+    private String idempotencyKey;
+
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
 

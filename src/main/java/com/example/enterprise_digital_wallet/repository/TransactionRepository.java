@@ -30,4 +30,6 @@ public interface TransactionRepository extends JpaRepository<WalletTransaction, 
             WHERE t.id = :transactionId
             """)
     Optional<WalletTransaction> findByIdWithWalletsAndUsers(UUID transactionId);
+
+    Optional<WalletTransaction> findByIdempotencyKey(String idempotencyKey);
 }

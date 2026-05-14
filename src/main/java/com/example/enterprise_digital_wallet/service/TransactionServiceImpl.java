@@ -32,6 +32,28 @@ public class TransactionServiceImpl implements TransactionService {
     public TransactionResponse transfer(TransferRequest request) {
         validateTransferRequest(request);
 
+        return transactionRepository.findByIdempotencyKey(request.idempotencyKey())
+                .map(this::mapToTransactionResponse)
+                .orElseGet(() -> processTransfer(request));
+    }
+
+    @Override
+    public List<TransactionResponse> getTransactionsByUserId(UUID userId) {
+        return transactionRepository.findAllByUserId(userId)
+                .stream()
+                .map(this::mapToTransactionResponse)
+                .toList();
+    }
+
+    @Override
+    public TransactionResponse getTransactionById(UUID transactionId) {
+        WalletTransaction transaction = transactionRepository.findByIdWithWalletsAndUsers(transactionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Transaction not found"));
+
+        return mapToTransactionResponse(transaction);
+    }
+
+    private TransactionResponse processTransfer(TransferRequest request) {
         Wallet senderWallet = getWallet(request.senderUserId());
         Wallet receiverWallet = getWallet(request.receiverUserId());
 
@@ -53,27 +75,12 @@ public class TransactionServiceImpl implements TransactionService {
                 .transactionType(TransactionType.TRANSFER)
                 .status(TransactionStatus.SUCCESS)
                 .referenceNumber(generateReferenceNumber())
+                .idempotencyKey(request.idempotencyKey())
                 .build();
 
         WalletTransaction savedTransaction = transactionRepository.save(transaction);
 
         return mapToTransactionResponse(savedTransaction);
-    }
-
-    @Override
-    public List<TransactionResponse> getTransactionsByUserId(UUID userId) {
-        return transactionRepository.findAllByUserId(userId)
-                .stream()
-                .map(this::mapToTransactionResponse)
-                .toList();
-    }
-
-    @Override
-    public TransactionResponse getTransactionById(UUID transactionId) {
-        WalletTransaction transaction = transactionRepository.findByIdWithWalletsAndUsers(transactionId)
-        .orElseThrow(() -> new ResourceNotFoundException("Transaction not found"));
-
-        return mapToTransactionResponse(transaction);
     }
 
     private void validateTransferRequest(TransferRequest request) {
@@ -110,6 +117,10 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     private String generateReferenceNumber() {
-        return "TXN-" + UUID.randomUUID().toString().replace("-", "").substring(0, 16).toUpperCase();
+        return "TXN-" + UUID.randomUUID()
+                .toString()
+                .replace("-", "")
+                .substring(0, 16)
+                .toUpperCase();
     }
 }
