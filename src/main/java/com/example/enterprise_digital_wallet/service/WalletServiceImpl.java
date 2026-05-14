@@ -34,7 +34,6 @@ public class WalletServiceImpl implements WalletService {
     @Transactional
     public WalletResponse deposit(UUID userId, MoneyRequest request) {
         Wallet wallet = getWallet(userId);
-
         wallet.setBalance(wallet.getBalance().add(request.amount()));
 
         Wallet savedWallet = walletRepository.save(wallet);
