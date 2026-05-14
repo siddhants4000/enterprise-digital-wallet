@@ -1,5 +1,6 @@
 package com.example.enterprise_digital_wallet.dto;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
@@ -11,5 +12,5 @@ public record WalletResponse(
         BigDecimal balance,
         String currency,
         Instant createdAt
-) {
+) implements Serializable {
 }

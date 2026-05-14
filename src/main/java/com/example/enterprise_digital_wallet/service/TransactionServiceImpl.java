@@ -14,6 +14,8 @@ import com.example.enterprise_digital_wallet.repository.WalletRepository;
 import com.example.enterprise_digital_wallet.event.WalletEvent;
 import java.time.Instant;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,6 +34,7 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "wallets", allEntries = true)
     public TransactionResponse transfer(TransferRequest request) {
         validateTransferRequest(request);
 

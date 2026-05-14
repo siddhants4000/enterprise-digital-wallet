@@ -29,3 +29,9 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: wallet_zookeeper:2181
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+  
+  redis:
+    image: redis:7
+    container_name: wallet_redis
+    ports:
+      - "6379:6379"

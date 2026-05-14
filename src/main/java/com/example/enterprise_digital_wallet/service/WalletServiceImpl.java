@@ -15,6 +15,8 @@ import com.example.enterprise_digital_wallet.entity.WalletTransaction;
 import com.example.enterprise_digital_wallet.repository.TransactionRepository;
 import com.example.enterprise_digital_wallet.event.WalletEvent;
 import java.time.Instant;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 
 import java.util.UUID;
 
@@ -29,6 +31,7 @@ public class WalletServiceImpl implements WalletService {
     private final WalletEventProducer walletEventProducer;
 
     @Override
+    @Cacheable(value = "wallets", key = "#userId")
     public WalletResponse getWalletByUserId(UUID userId) {
         Wallet wallet = getWallet(userId);
         return mapToWalletResponse(wallet);
@@ -36,6 +39,7 @@ public class WalletServiceImpl implements WalletService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "wallets", key = "#userId")
     public WalletResponse deposit(UUID userId, MoneyRequest request) {
         Wallet wallet = getWallet(userId);
         wallet.setBalance(wallet.getBalance().add(request.amount()));
@@ -71,6 +75,7 @@ public class WalletServiceImpl implements WalletService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "wallets", key = "#userId")
     public WalletResponse withdraw(UUID userId, MoneyRequest request) {
         Wallet wallet = getWallet(userId);
 
