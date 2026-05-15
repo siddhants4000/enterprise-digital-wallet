@@ -6,15 +6,13 @@ import com.example.enterprise_digital_wallet.entity.TransactionStatus;
 import com.example.enterprise_digital_wallet.entity.TransactionType;
 import com.example.enterprise_digital_wallet.entity.Wallet;
 import com.example.enterprise_digital_wallet.entity.WalletTransaction;
+import com.example.enterprise_digital_wallet.event.WalletEvent;
 import com.example.enterprise_digital_wallet.exception.InsufficientBalanceException;
 import com.example.enterprise_digital_wallet.exception.InvalidTransactionException;
 import com.example.enterprise_digital_wallet.exception.ResourceNotFoundException;
 import com.example.enterprise_digital_wallet.repository.TransactionRepository;
 import com.example.enterprise_digital_wallet.repository.WalletRepository;
-import com.example.enterprise_digital_wallet.event.WalletEvent;
-import java.time.Instant;
 import lombok.RequiredArgsConstructor;
-
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -70,12 +68,12 @@ public class TransactionServiceImpl implements TransactionService {
         senderWallet.setBalance(senderWallet.getBalance().subtract(request.amount()));
         receiverWallet.setBalance(receiverWallet.getBalance().add(request.amount()));
 
-        walletRepository.save(senderWallet);
-        walletRepository.save(receiverWallet);
+        Wallet savedSenderWallet = walletRepository.save(senderWallet);
+        Wallet savedReceiverWallet = walletRepository.save(receiverWallet);
 
         WalletTransaction transaction = WalletTransaction.builder()
-                .senderWallet(senderWallet)
-                .receiverWallet(receiverWallet)
+                .senderWallet(savedSenderWallet)
+                .receiverWallet(savedReceiverWallet)
                 .amount(request.amount())
                 .currency(DEFAULT_CURRENCY)
                 .transactionType(TransactionType.TRANSFER)
@@ -89,17 +87,25 @@ public class TransactionServiceImpl implements TransactionService {
         WalletEvent event = new WalletEvent(
                 "MONEY_TRANSFERRED",
                 savedTransaction.getId(),
-                senderWallet.getUser().getId(),
-                receiverWallet.getUser().getId(),
+                savedSenderWallet.getUser().getId(),
+                savedReceiverWallet.getUser().getId(),
                 savedTransaction.getAmount(),
                 savedTransaction.getCurrency(),
                 savedTransaction.getReferenceNumber(),
-                Instant.now()
+                savedTransaction.getCreatedAt()
         );
 
-        walletEventProducer.publishWalletEvent(event);
+        publishWalletEventSafely(event);
 
         return mapToTransactionResponse(savedTransaction);
+    }
+
+    private void publishWalletEventSafely(WalletEvent event) {
+        try {
+            walletEventProducer.publishWalletEvent(event);
+        } catch (Exception exception) {
+            System.out.println("Kafka publish failed: " + exception.getMessage());
+        }
     }
 
     private void validateTransferRequest(TransferRequest request) {
