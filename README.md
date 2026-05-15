@@ -9,6 +9,9 @@ The project simulates a real-world digital wallet/payment system with support fo
 - Deposits and withdrawals
 - Peer-to-peer money transfers
 - Transaction history tracking
+- Kafka event-driven audit logging
+- Redis caching
+- Keycloak OAuth2 authentication
 - Validation and exception handling
 - Dockerized local development
 
@@ -25,6 +28,8 @@ The primary goal of this project is to demonstrate enterprise backend engineerin
 - Spring Web
 - Spring Data JPA
 - Hibernate ORM
+- Spring Security
+- OAuth2 Resource Server
 - Maven
 
 ## Database
@@ -35,6 +40,9 @@ The primary goal of this project is to demonstrate enterprise backend engineerin
 
 - Docker
 - Docker Compose
+- Apache Kafka
+- Redis
+- Keycloak
 
 ## Utilities
 
@@ -44,26 +52,7 @@ The primary goal of this project is to demonstrate enterprise backend engineerin
 
 ---
 
-# Planned Enterprise Features
-
-The project roadmap includes:
-
-- Kafka event-driven communication
-- Redis caching
-- Keycloak OAuth2 authentication
-- Elasticsearch transaction search
-- Netflix Conductor workflows
-- Jenkins CI/CD pipeline
-- Kubernetes deployment
-- Prometheus monitoring
-- Grafana dashboards
-- Distributed tracing
-- Rate limiting
-- Audit logging
-
----
-
-# Current Features
+# Current Enterprise Features
 
 ## User Module
 
@@ -88,8 +77,28 @@ The project roadmap includes:
 - Transaction status tracking
 - Transaction type tracking
 
+## Audit Log Module
+
+- Kafka-based event consumption
+- Wallet event tracking
+- Deposit audit logs
+- Withdrawal audit logs
+- Transaction event persistence
+- Event timestamps
+
+## Security Features
+
+- Keycloak OAuth2 authentication
+- JWT-based authorization
+- Role-based secured APIs
+- Stateless authentication
+
 ## Platform Features
 
+- Redis wallet caching
+- Kafka event publishing
+- Kafka event consumption
+- Audit logging system
 - Global exception handling
 - Request validation
 - DTO-based architecture
@@ -99,30 +108,72 @@ The project roadmap includes:
 
 ---
 
+# Planned Enterprise Features
+
+The project roadmap includes:
+
+- Elasticsearch transaction search
+- Netflix Conductor workflows
+- Jenkins CI/CD pipeline
+- Kubernetes deployment
+- Prometheus monitoring
+- Grafana dashboards
+- Distributed tracing
+- Rate limiting
+- Saga orchestration
+- Event sourcing
+
+---
+
 # System Architecture
 
 ```mermaid
 flowchart TD
 
-    Client[Client / Postman / Swagger UI]
+    Client[Client / Postman / Swagger]
 
-    Client --> ControllerLayer[REST Controller Layer]
+    Client --> Keycloak[Keycloak Authentication]
 
-    ControllerLayer --> UserService[User Service]
-    ControllerLayer --> WalletService[Wallet Service]
-    ControllerLayer --> TransactionService[Transaction Service]
+    Keycloak --> SpringBoot[Spring Boot API]
 
-    UserService --> UserRepository[User Repository]
-    WalletService --> WalletRepository[Wallet Repository]
-    TransactionService --> TransactionRepository[Transaction Repository]
+    SpringBoot --> PostgreSQL[(PostgreSQL)]
 
-    UserRepository --> PostgreSQL[(PostgreSQL)]
-    WalletRepository --> PostgreSQL
-    TransactionRepository --> PostgreSQL
+    SpringBoot --> Redis[(Redis Cache)]
 
-    UserService --> WalletService
-    WalletService --> TransactionRepository
-    TransactionService --> WalletRepository
+    SpringBoot --> KafkaProducer[Kafka Producer]
+
+    KafkaProducer --> Kafka[(Apache Kafka)]
+
+    Kafka --> KafkaConsumer[Audit Log Consumer]
+
+    KafkaConsumer --> AuditLogs[(Audit Logs Table)]
+```
+
+---
+
+# Kafka Event Flow
+
+```mermaid
+sequenceDiagram
+
+    participant Client
+    participant WalletService
+    participant KafkaProducer
+    participant Kafka
+    participant AuditConsumer
+    participant PostgreSQL
+
+    Client->>WalletService: Deposit Request
+
+    WalletService->>PostgreSQL: Update Wallet
+
+    WalletService->>KafkaProducer: Publish WalletEvent
+
+    KafkaProducer->>Kafka: Send Event
+
+    Kafka->>AuditConsumer: Consume Event
+
+    AuditConsumer->>PostgreSQL: Save Audit Log
 ```
 
 ---
@@ -171,11 +222,14 @@ src/main/java/com/example/enterprise_digital_wallet
 │   ├── HealthController
 │   ├── UserController
 │   ├── WalletController
-│   └── TransactionController
+│   ├── TransactionController
+│   └── AuditLogController
 │
 ├── dto
 │
 ├── entity
+│
+├── event
 │
 ├── exception
 │
@@ -226,6 +280,40 @@ wallet_transactions
 ├── reference_number
 ├── created_at
 ```
+
+## Audit Logs Table
+
+```text
+audit_logs
+├── id
+├── event_type
+├── transaction_id
+├── sender_user_id
+├── receiver_user_id
+├── amount
+├── currency
+├── reference_number
+├── occurred_at
+```
+
+---
+
+# Security
+
+The platform uses Keycloak OAuth2 authentication with JWT Bearer tokens.
+
+## Features
+
+- OAuth2 Resource Server
+- JWT validation
+- Role-based authorization
+- Secure REST APIs
+- Stateless authentication
+
+## Roles
+
+- ADMIN
+- USER
 
 ---
 
@@ -307,12 +395,36 @@ GET /api/v1/transactions/{transactionId}
 
 ---
 
+# Audit Log APIs
+
+## Get All Audit Logs
+
+```http
+GET /api/v1/audit-logs
+```
+
+---
+
 # Example API Requests
+
+# Generate Access Token
+
+```bash
+curl -X POST "http://localhost:8081/realms/wallet-realm/protocol/openid-connect/token" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "client_id=wallet-api" \
+  -d "username=walletadmin" \
+  -d "password=password" \
+  -d "grant_type=password"
+```
+
+---
 
 # Create User
 
 ```bash
 curl -X POST "http://localhost:8080/api/v1/users" \
+  -H "Authorization: Bearer ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
         "fullName":"Siddhant Sharma",
@@ -327,6 +439,7 @@ curl -X POST "http://localhost:8080/api/v1/users" \
 
 ```bash
 curl -X POST "http://localhost:8080/api/v1/wallets/users/{userId}/deposit" \
+  -H "Authorization: Bearer ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
         "amount":100.00
@@ -339,6 +452,7 @@ curl -X POST "http://localhost:8080/api/v1/wallets/users/{userId}/deposit" \
 
 ```bash
 curl -X POST "http://localhost:8080/api/v1/wallets/users/{userId}/withdraw" \
+  -H "Authorization: Bearer ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
         "amount":50.00
@@ -351,6 +465,7 @@ curl -X POST "http://localhost:8080/api/v1/wallets/users/{userId}/withdraw" \
 
 ```bash
 curl -X POST "http://localhost:8080/api/v1/transactions/transfer" \
+  -H "Authorization: Bearer ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
         "senderUserId":"SENDER_USER_ID",
@@ -358,6 +473,33 @@ curl -X POST "http://localhost:8080/api/v1/transactions/transfer" \
         "amount":150.00
       }'
 ```
+
+---
+
+# Get Audit Logs
+
+```bash
+curl -X GET "http://localhost:8080/api/v1/audit-logs" \
+  -H "Authorization: Bearer ACCESS_TOKEN"
+```
+
+---
+
+# Redis Caching
+
+Redis is used for wallet-level caching to reduce repeated database reads.
+
+## Cached Operations
+
+- Fetch wallet by user ID
+
+## Cache Eviction
+
+Wallet cache is automatically invalidated on:
+
+- Deposit
+- Withdrawal
+- Money transfer
 
 ---
 
@@ -372,13 +514,13 @@ cd enterprise-digital-wallet
 
 ---
 
-# 2. Start PostgreSQL
+# 2. Start Infrastructure
 
 ```bash
 docker compose up -d
 ```
 
-Verify container:
+Verify running containers:
 
 ```bash
 docker ps
@@ -402,6 +544,29 @@ docker ps
 
 ---
 
+# Keycloak Setup
+
+Keycloak runs on:
+
+```text
+http://localhost:8081
+```
+
+## Realm
+
+```text
+wallet-realm
+```
+
+## Test User
+
+```text
+username: walletadmin
+password: password
+```
+
+---
+
 # Application URLs
 
 ## Backend API
@@ -420,6 +585,12 @@ http://localhost:8080/swagger-ui/index.html
 
 ```text
 http://localhost:8080/v3/api-docs
+```
+
+## Keycloak
+
+```text
+http://localhost:8081
 ```
 
 ---
@@ -471,22 +642,15 @@ The application uses centralized global exception handling for:
 - Repository pattern
 - RESTful API design
 - Exception-driven validation
+- Event-driven architecture
 - Production-style entity modeling
 
 ---
 
 # Future Improvements
 
-## Security
-
-- JWT Authentication
-- OAuth2 Authorization
-- Keycloak Integration
-- Role-Based Access Control
-
 ## Distributed Systems
 
-- Kafka event publishing
 - Saga orchestration
 - Event sourcing
 - Distributed tracing
@@ -504,6 +668,10 @@ The application uses centralized global exception handling for:
 - Kubernetes deployment
 - Helm charts
 - Docker image optimization
+
+## Search
+
+- Elasticsearch transaction search
 
 ---
 
