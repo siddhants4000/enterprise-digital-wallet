@@ -12,6 +12,7 @@ The project simulates a real-world digital wallet/payment system with support fo
 - Kafka event-driven audit logging
 - Redis caching
 - Keycloak OAuth2 authentication
+- Elasticsearch transaction search
 - Validation and exception handling
 - Dockerized local development
 
@@ -27,6 +28,7 @@ The primary goal of this project is to demonstrate enterprise backend engineerin
 - Spring Boot
 - Spring Web
 - Spring Data JPA
+- Spring Data Elasticsearch
 - Hibernate ORM
 - Spring Security
 - OAuth2 Resource Server
@@ -35,6 +37,10 @@ The primary goal of this project is to demonstrate enterprise backend engineerin
 ## Database
 
 - PostgreSQL
+
+## Search
+
+- Elasticsearch
 
 ## Infrastructure
 
@@ -76,6 +82,7 @@ The primary goal of this project is to demonstrate enterprise backend engineerin
 - Unique transaction reference numbers
 - Transaction status tracking
 - Transaction type tracking
+- Idempotent transfer requests
 
 ## Audit Log Module
 
@@ -83,8 +90,18 @@ The primary goal of this project is to demonstrate enterprise backend engineerin
 - Wallet event tracking
 - Deposit audit logs
 - Withdrawal audit logs
+- Transfer audit logs
 - Transaction event persistence
 - Event timestamps
+
+## Search Module
+
+- Elasticsearch transaction indexing
+- Transaction search by transaction type
+- Indexed deposit transactions
+- Indexed withdrawal transactions
+- Indexed transfer transactions
+- Direct Elasticsearch verification using the wallet-transactions index
 
 ## Security Features
 
@@ -99,6 +116,7 @@ The primary goal of this project is to demonstrate enterprise backend engineerin
 - Kafka event publishing
 - Kafka event consumption
 - Audit logging system
+- Elasticsearch transaction search
 - Global exception handling
 - Request validation
 - DTO-based architecture
@@ -112,7 +130,7 @@ The primary goal of this project is to demonstrate enterprise backend engineerin
 
 The project roadmap includes:
 
-- Elasticsearch transaction search
+- Kibana dashboard for Elasticsearch data
 - Netflix Conductor workflows
 - Jenkins CI/CD pipeline
 - Kubernetes deployment
@@ -147,6 +165,10 @@ flowchart TD
     Kafka --> KafkaConsumer[Audit Log Consumer]
 
     KafkaConsumer --> AuditLogs[(Audit Logs Table)]
+
+    SpringBoot --> Elasticsearch[(Elasticsearch)]
+
+    Elasticsearch --> SearchAPI[Transaction Search API]
 ```
 
 ---
@@ -163,9 +185,9 @@ sequenceDiagram
     participant AuditConsumer
     participant PostgreSQL
 
-    Client->>WalletService: Deposit Request
+    Client->>WalletService: Deposit / Withdraw / Transfer Request
 
-    WalletService->>PostgreSQL: Update Wallet
+    WalletService->>PostgreSQL: Update Wallet and Save Transaction
 
     WalletService->>KafkaProducer: Publish WalletEvent
 
@@ -174,6 +196,32 @@ sequenceDiagram
     Kafka->>AuditConsumer: Consume Event
 
     AuditConsumer->>PostgreSQL: Save Audit Log
+```
+
+---
+
+# Elasticsearch Indexing Flow
+
+```mermaid
+sequenceDiagram
+
+    participant Client
+    participant WalletService
+    participant TransactionRepository
+    participant ElasticsearchService
+    participant Elasticsearch
+
+    Client->>WalletService: Deposit / Withdraw / Transfer Request
+
+    WalletService->>TransactionRepository: Save Wallet Transaction
+
+    WalletService->>ElasticsearchService: Index Transaction
+
+    ElasticsearchService->>Elasticsearch: Save Transaction Search Document
+
+    Client->>ElasticsearchService: Search Transactions
+
+    ElasticsearchService->>Elasticsearch: Query Indexed Transactions
 ```
 
 ---
@@ -223,7 +271,8 @@ src/main/java/com/example/enterprise_digital_wallet
 │   ├── UserController
 │   ├── WalletController
 │   ├── TransactionController
-│   └── AuditLogController
+│   ├── AuditLogController
+│   └── TransactionSearchController
 │
 ├── dto
 │
@@ -234,6 +283,8 @@ src/main/java/com/example/enterprise_digital_wallet
 ├── exception
 │
 ├── repository
+│
+├── search
 │
 ├── service
 │
@@ -252,7 +303,9 @@ users
 ├── full_name
 ├── email
 ├── phone_number
+├── status
 ├── created_at
+├── updated_at
 ```
 
 ## Wallets Table
@@ -278,6 +331,7 @@ wallet_transactions
 ├── transaction_type
 ├── status
 ├── reference_number
+├── idempotency_key
 ├── created_at
 ```
 
@@ -294,7 +348,36 @@ audit_logs
 ├── currency
 ├── reference_number
 ├── occurred_at
+├── consumed_at
 ```
+
+---
+
+# Elasticsearch Design
+
+## Index
+
+```text
+wallet-transactions
+```
+
+## Indexed Transaction Document
+
+```text
+wallet-transactions
+├── id
+├── transaction_id
+├── sender_user_id
+├── receiver_user_id
+├── amount
+├── currency
+├── transaction_type
+├── status
+├── reference_number
+├── created_at
+```
+
+Elasticsearch is used to support transaction search and fast filtering without relying only on PostgreSQL queries.
 
 ---
 
@@ -405,6 +488,24 @@ GET /api/v1/audit-logs
 
 ---
 
+# Search APIs
+
+## Search Transactions By Type
+
+```http
+GET /api/v1/search/transactions/type/{transactionType}
+```
+
+Example transaction types:
+
+```text
+DEPOSIT
+WITHDRAWAL
+TRANSFER
+```
+
+---
+
 # Example API Requests
 
 # Generate Access Token
@@ -470,7 +571,8 @@ curl -X POST "http://localhost:8080/api/v1/transactions/transfer" \
   -d '{
         "senderUserId":"SENDER_USER_ID",
         "receiverUserId":"RECEIVER_USER_ID",
-        "amount":150.00
+        "amount":150.00,
+        "idempotencyKey":"unique-transfer-key-001"
       }'
 ```
 
@@ -481,6 +583,23 @@ curl -X POST "http://localhost:8080/api/v1/transactions/transfer" \
 ```bash
 curl -X GET "http://localhost:8080/api/v1/audit-logs" \
   -H "Authorization: Bearer ACCESS_TOKEN"
+```
+
+---
+
+# Search Transactions By Type
+
+```bash
+curl -X GET "http://localhost:8080/api/v1/search/transactions/type/DEPOSIT" \
+  -H "Authorization: Bearer ACCESS_TOKEN"
+```
+
+---
+
+# Direct Elasticsearch Verification
+
+```bash
+curl "http://localhost:9200/wallet-transactions/_search?pretty"
 ```
 
 ---
@@ -500,6 +619,40 @@ Wallet cache is automatically invalidated on:
 - Deposit
 - Withdrawal
 - Money transfer
+
+---
+
+# Kafka Event-Driven Audit Logging
+
+Kafka is used to publish wallet transaction events.
+
+## Published Events
+
+- MONEY_DEPOSITED
+- MONEY_WITHDRAWN
+- MONEY_TRANSFERRED
+
+## Consumer Responsibility
+
+The Kafka consumer listens to wallet events and persists them as audit logs in PostgreSQL.
+
+---
+
+# Elasticsearch Transaction Search
+
+Elasticsearch is used to index transaction data for search use cases.
+
+## Indexed Transactions
+
+- Deposits
+- Withdrawals
+- Transfers
+
+## Search Use Cases
+
+- Search by transaction type
+- Inspect indexed transactions directly
+- Prepare for future filtering by amount, status, user ID, reference number, and date range
 
 ---
 
@@ -593,6 +746,12 @@ http://localhost:8080/v3/api-docs
 http://localhost:8081
 ```
 
+## Elasticsearch
+
+```text
+http://localhost:9200
+```
+
 ---
 
 # Database Configuration
@@ -605,6 +764,14 @@ spring.datasource.password=wallet_password
 
 ---
 
+# Elasticsearch Configuration
+
+```properties
+spring.elasticsearch.uris=http://localhost:9200
+```
+
+---
+
 # Exception Handling
 
 The application uses centralized global exception handling for:
@@ -613,6 +780,7 @@ The application uses centralized global exception handling for:
 - Resource not found errors
 - Insufficient balance errors
 - Invalid transaction errors
+- Authentication errors
 - Internal server errors
 
 ---
@@ -630,6 +798,7 @@ The application uses centralized global exception handling for:
 - Amount must be greater than zero
 - Sender and receiver cannot be same
 - Sender must have sufficient balance
+- Idempotency key should be unique for transfer requests
 
 ---
 
@@ -643,6 +812,8 @@ The application uses centralized global exception handling for:
 - RESTful API design
 - Exception-driven validation
 - Event-driven architecture
+- Search indexing
+- Cache-aside pattern
 - Production-style entity modeling
 
 ---
@@ -669,9 +840,14 @@ The application uses centralized global exception handling for:
 - Helm charts
 - Docker image optimization
 
-## Search
+## Search And Analytics
 
-- Elasticsearch transaction search
+- Kibana dashboard
+- Search by transaction status
+- Search by user ID
+- Search by reference number
+- Date range filtering
+- Amount range filtering
 
 ---
 
