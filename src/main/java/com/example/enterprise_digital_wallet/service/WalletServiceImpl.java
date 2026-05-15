@@ -11,6 +11,8 @@ import com.example.enterprise_digital_wallet.exception.InsufficientBalanceExcept
 import com.example.enterprise_digital_wallet.exception.ResourceNotFoundException;
 import com.example.enterprise_digital_wallet.repository.TransactionRepository;
 import com.example.enterprise_digital_wallet.repository.WalletRepository;
+import com.example.enterprise_digital_wallet.search.TransactionSearchService;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -26,6 +28,7 @@ public class WalletServiceImpl implements WalletService {
     private final WalletRepository walletRepository;
     private final TransactionRepository transactionRepository;
     private final WalletEventProducer walletEventProducer;
+    private final TransactionSearchService transactionSearchService;
 
     @Override
     @Cacheable(value = "wallets", key = "#userId")
@@ -53,6 +56,7 @@ public class WalletServiceImpl implements WalletService {
                 .build();
 
         WalletTransaction savedTransaction = transactionRepository.save(transaction);
+        transactionSearchService.indexTransaction(savedTransaction);
 
         WalletEvent event = new WalletEvent(
                 "MONEY_DEPOSITED",

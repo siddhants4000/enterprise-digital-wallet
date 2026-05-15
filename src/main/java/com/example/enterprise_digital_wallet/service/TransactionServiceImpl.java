@@ -12,6 +12,8 @@ import com.example.enterprise_digital_wallet.exception.InvalidTransactionExcepti
 import com.example.enterprise_digital_wallet.exception.ResourceNotFoundException;
 import com.example.enterprise_digital_wallet.repository.TransactionRepository;
 import com.example.enterprise_digital_wallet.repository.WalletRepository;
+import com.example.enterprise_digital_wallet.search.TransactionSearchService;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
@@ -29,6 +31,7 @@ public class TransactionServiceImpl implements TransactionService {
     private final WalletRepository walletRepository;
     private final TransactionRepository transactionRepository;
     private final WalletEventProducer walletEventProducer;
+    private final TransactionSearchService transactionSearchService;
 
     @Override
     @Transactional
@@ -83,6 +86,8 @@ public class TransactionServiceImpl implements TransactionService {
                 .build();
 
         WalletTransaction savedTransaction = transactionRepository.save(transaction);
+
+        transactionSearchService.indexTransaction(savedTransaction);
 
         WalletEvent event = new WalletEvent(
                 "MONEY_TRANSFERRED",
