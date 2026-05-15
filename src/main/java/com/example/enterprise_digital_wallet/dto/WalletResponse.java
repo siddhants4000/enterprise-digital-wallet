@@ -5,7 +5,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
-public record WalletResponse(
+public record WalletResponse (
         UUID id,
         UUID userId,
         String userEmail,

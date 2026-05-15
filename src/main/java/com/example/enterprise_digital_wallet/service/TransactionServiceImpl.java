@@ -13,13 +13,13 @@ import com.example.enterprise_digital_wallet.exception.ResourceNotFoundException
 import com.example.enterprise_digital_wallet.repository.TransactionRepository;
 import com.example.enterprise_digital_wallet.repository.WalletRepository;
 import com.example.enterprise_digital_wallet.search.TransactionSearchService;
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -45,14 +45,15 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
-    public List<TransactionResponse> getTransactionsByUserId(UUID userId) {
-        return transactionRepository.findAllByUserId(userId)
-                .stream()
-                .map(this::mapToTransactionResponse)
-                .toList();
+    @Transactional(readOnly = true)
+    public Page<TransactionResponse> getTransactionsByUserId(UUID userId, Pageable pageable) {
+        Page<WalletTransaction> transactions = transactionRepository.findAllByUserId(userId, pageable);
+
+        return transactions.map(this::mapToTransactionResponse);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public TransactionResponse getTransactionById(UUID transactionId) {
         WalletTransaction transaction = transactionRepository.findByIdWithWalletsAndUsers(transactionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Transaction not found"));

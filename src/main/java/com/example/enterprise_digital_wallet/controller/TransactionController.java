@@ -7,10 +7,13 @@ import com.example.enterprise_digital_wallet.service.TransactionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.access.prepost.PreAuthorize;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -30,8 +33,23 @@ public class TransactionController {
 
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @GetMapping("/users/{userId}")
-    public ApiResponse<List<TransactionResponse>> getTransactionsByUserId(@PathVariable UUID userId) {
-        List<TransactionResponse> response = transactionService.getTransactionsByUserId(userId);
+    public ApiResponse<Page<TransactionResponse>> getTransactionsByUserId(
+            @PathVariable UUID userId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String direction
+    ) {
+
+        Sort sort = direction.equalsIgnoreCase("asc")
+                ? Sort.by(sortBy).ascending()
+                : Sort.by(sortBy).descending();
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Page<TransactionResponse> response =
+                transactionService.getTransactionsByUserId(userId, pageable);
+
         return ApiResponse.success("Transactions fetched successfully", response);
     }
 

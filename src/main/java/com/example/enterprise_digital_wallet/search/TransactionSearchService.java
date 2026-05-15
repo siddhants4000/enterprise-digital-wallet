@@ -4,6 +4,7 @@ import com.example.enterprise_digital_wallet.entity.WalletTransaction;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -47,6 +48,14 @@ public class TransactionSearchService {
     }
 
     public List<TransactionSearchDocument> searchByTransactionType(String transactionType) {
-        return transactionSearchRepository.findByTransactionType(transactionType);
+        return transactionSearchRepository.findByTransactionType(transactionType.toUpperCase());
+    }
+
+    public List<TransactionSearchDocument> searchByStatus(String status) {
+        return transactionSearchRepository.findByStatus(status.toUpperCase());
+    }
+
+    public List<TransactionSearchDocument> searchByAmountRange(BigDecimal minAmount, BigDecimal maxAmount) {
+        return transactionSearchRepository.findByAmountBetween(minAmount, maxAmount);
     }
 }
