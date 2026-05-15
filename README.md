@@ -1,5 +1,6 @@
-# Enterprise Digital Wallet Platform
+![CI](https://github.com/siddhants4000/enterprise-digital-wallet/actions/workflows/build.yml/badge.svg)
 
+# Enterprise Digital Wallet Platform
 Enterprise Digital Wallet Platform is a production-style backend application built using Spring Boot and PostgreSQL.
 
 The project simulates a real-world digital wallet/payment system with support for:
