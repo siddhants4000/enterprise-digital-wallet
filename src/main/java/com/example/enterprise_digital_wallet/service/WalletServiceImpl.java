@@ -2,21 +2,20 @@ package com.example.enterprise_digital_wallet.service;
 
 import com.example.enterprise_digital_wallet.dto.MoneyRequest;
 import com.example.enterprise_digital_wallet.dto.WalletResponse;
-import com.example.enterprise_digital_wallet.entity.Wallet;
-import com.example.enterprise_digital_wallet.exception.InsufficientBalanceException;
-import com.example.enterprise_digital_wallet.exception.ResourceNotFoundException;
-import com.example.enterprise_digital_wallet.repository.WalletRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import com.example.enterprise_digital_wallet.entity.TransactionStatus;
 import com.example.enterprise_digital_wallet.entity.TransactionType;
+import com.example.enterprise_digital_wallet.entity.Wallet;
 import com.example.enterprise_digital_wallet.entity.WalletTransaction;
-import com.example.enterprise_digital_wallet.repository.TransactionRepository;
 import com.example.enterprise_digital_wallet.event.WalletEvent;
-import java.time.Instant;
+import com.example.enterprise_digital_wallet.exception.InsufficientBalanceException;
+import com.example.enterprise_digital_wallet.exception.ResourceNotFoundException;
+import com.example.enterprise_digital_wallet.repository.TransactionRepository;
+import com.example.enterprise_digital_wallet.repository.WalletRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
@@ -25,9 +24,7 @@ import java.util.UUID;
 public class WalletServiceImpl implements WalletService {
 
     private final WalletRepository walletRepository;
-
     private final TransactionRepository transactionRepository;
-
     private final WalletEventProducer walletEventProducer;
 
     @Override
@@ -55,20 +52,20 @@ public class WalletServiceImpl implements WalletService {
                 .referenceNumber(generateReferenceNumber())
                 .build();
 
-        transactionRepository.save(transaction);
+        WalletTransaction savedTransaction = transactionRepository.save(transaction);
 
         WalletEvent event = new WalletEvent(
                 "MONEY_DEPOSITED",
-                transaction.getId(),
+                savedTransaction.getId(),
                 null,
                 savedWallet.getUser().getId(),
-                transaction.getAmount(),
-                transaction.getCurrency(),
-                transaction.getReferenceNumber(),
-                Instant.now()
+                savedTransaction.getAmount(),
+                savedTransaction.getCurrency(),
+                savedTransaction.getReferenceNumber(),
+                savedTransaction.getCreatedAt()
         );
 
-        walletEventProducer.publishWalletEvent(event);
+        publishWalletEventSafely(event);
 
         return mapToWalletResponse(savedWallet);
     }
@@ -96,27 +93,35 @@ public class WalletServiceImpl implements WalletService {
                 .referenceNumber(generateReferenceNumber())
                 .build();
 
-        transactionRepository.save(transaction);
+        WalletTransaction savedTransaction = transactionRepository.save(transaction);
 
         WalletEvent event = new WalletEvent(
                 "MONEY_WITHDRAWN",
-                transaction.getId(),
+                savedTransaction.getId(),
                 savedWallet.getUser().getId(),
                 null,
-                transaction.getAmount(),
-                transaction.getCurrency(),
-                transaction.getReferenceNumber(),
-                Instant.now()
+                savedTransaction.getAmount(),
+                savedTransaction.getCurrency(),
+                savedTransaction.getReferenceNumber(),
+                savedTransaction.getCreatedAt()
         );
 
-        walletEventProducer.publishWalletEvent(event);
+        publishWalletEventSafely(event);
 
         return mapToWalletResponse(savedWallet);
     }
 
+    private void publishWalletEventSafely(WalletEvent event) {
+        try {
+            walletEventProducer.publishWalletEvent(event);
+        } catch (Exception exception) {
+            System.out.println("Kafka publish failed: " + exception.getMessage());
+        }
+    }
+
     private Wallet getWallet(UUID userId) {
         return walletRepository.findByUserIdWithUser(userId)
-        .orElseThrow(() -> new ResourceNotFoundException("Wallet not found for user"));
+                .orElseThrow(() -> new ResourceNotFoundException("Wallet not found for user"));
     }
 
     private WalletResponse mapToWalletResponse(Wallet wallet) {

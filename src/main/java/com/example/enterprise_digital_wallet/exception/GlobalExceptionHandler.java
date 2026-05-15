@@ -2,12 +2,15 @@ package com.example.enterprise_digital_wallet.exception;
 
 import com.example.enterprise_digital_wallet.dto.ApiResponse;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -33,9 +36,12 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(Exception.class)
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ApiResponse<Object> handleGenericException(Exception ex) {
-        return ApiResponse.failure("Something went wrong", null);
+    public ResponseEntity<ApiResponse<Object>> handleGenericException(Exception exception) {
+        log.error("Unhandled application error", exception);
+
+        return ResponseEntity
+                .internalServerError()
+                .body(ApiResponse.failure("Something went wrong", null));
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)
