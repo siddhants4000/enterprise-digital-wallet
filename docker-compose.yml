@@ -89,5 +89,19 @@ services:
       - redis
       - elasticsearch
 
+  grafana:
+    image: grafana/grafana:latest
+    container_name: wallet_grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+
 volumes:
   elasticsearch_data:
+  grafana_data:
