@@ -1,23 +1,102 @@
+# Enterprise Digital Wallet Platform
+
 ![CI](https://github.com/siddhants4000/enterprise-digital-wallet/actions/workflows/build.yml/badge.svg)
 
-# Enterprise Digital Wallet Platform
 Enterprise Digital Wallet Platform is a production-style backend application built using Spring Boot and PostgreSQL.
 
-The project simulates a real-world digital wallet/payment system with support for:
+The project simulates a real-world digital wallet and payment infrastructure with enterprise backend engineering concepts such as:
 
-- User onboarding
-- Wallet management
-- Deposits and withdrawals
-- Peer-to-peer money transfers
-- Transaction history tracking
-- Kafka event-driven audit logging
-- Redis caching
-- Keycloak OAuth2 authentication
-- Elasticsearch transaction search
-- Validation and exception handling
-- Dockerized local development
+* OAuth2 JWT authentication
+* Event-driven architecture
+* Distributed caching
+* Search indexing
+* Rate limiting
+* Observability and monitoring
+* Metrics collection
+* Production-ready REST APIs
+* Centralized exception handling
+* Idempotent transactions
+* Infrastructure integration
 
-The primary goal of this project is to demonstrate enterprise backend engineering concepts using modern Java backend technologies and production-oriented architecture patterns.
+The application demonstrates how modern backend systems are designed using scalable and production-oriented architecture patterns.
+
+---
+
+# Features
+
+## Core Wallet Features
+
+* User onboarding
+* Automatic wallet creation
+* Deposit money
+* Withdraw money
+* Peer-to-peer transfers
+* Wallet balance management
+* Transaction history tracking
+* Transaction status tracking
+* Unique transaction reference numbers
+* Idempotent transfer requests
+
+---
+
+# Enterprise Features
+
+## Security
+
+* Keycloak OAuth2 authentication
+* JWT Bearer token authorization
+* Role-based access control
+* Stateless authentication
+* Spring Security integration
+
+## Caching
+
+* Redis wallet caching
+* Cache invalidation on updates
+* Reduced database reads
+
+## Event-Driven Architecture
+
+* Kafka-based wallet events
+* Asynchronous audit logging
+* Event publishing and consumption
+* Transaction event persistence
+
+## Search
+
+* Elasticsearch transaction indexing
+* Transaction search APIs
+* Indexed transaction documents
+* Fast filtering and querying
+
+## Monitoring And Observability
+
+* Spring Boot Actuator
+* Prometheus metrics
+* Grafana dashboards
+* JVM monitoring
+* HTTP metrics
+* Database pool metrics
+* Security metrics
+* Rate limiting metrics
+
+## API Management
+
+* Swagger/OpenAPI documentation
+* Global exception handling
+* Request validation
+* DTO-based architecture
+* Production-style REST APIs
+
+## Infrastructure
+
+* PostgreSQL persistence
+* Dockerized local development
+* Docker Compose orchestration
+* Kafka infrastructure
+* Redis infrastructure
+* Elasticsearch infrastructure
+* Keycloak identity management
 
 ---
 
@@ -25,122 +104,52 @@ The primary goal of this project is to demonstrate enterprise backend engineerin
 
 ## Backend
 
-- Java 21
-- Spring Boot
-- Spring Web
-- Spring Data JPA
-- Spring Data Elasticsearch
-- Hibernate ORM
-- Spring Security
-- OAuth2 Resource Server
-- Maven
+* Java 21
+* Spring Boot
+* Spring Web
+* Spring Data JPA
+* Spring Security
+* Spring Validation
+* Hibernate ORM
+* Maven
+
+## Security
+
+* OAuth2 Resource Server
+* JWT Authentication
+* Keycloak
 
 ## Database
 
-- PostgreSQL
+* PostgreSQL
 
-## Search
+## Search Engine
 
-- Elasticsearch
+* Elasticsearch
+
+## Messaging
+
+* Apache Kafka
+
+## Caching
+
+* Redis
+
+## Monitoring
+
+* Spring Boot Actuator
+* Prometheus
+* Grafana
+* Micrometer
 
 ## Infrastructure
 
-- Docker
-- Docker Compose
-- Apache Kafka
-- Redis
-- Keycloak
+* Docker
+* Docker Compose
 
-## Utilities
+## API Documentation
 
-- Lombok
-- Bean Validation
-- OpenAPI / Swagger
-
----
-
-# Current Enterprise Features
-
-## User Module
-
-- Create user
-- Fetch user by ID
-- Fetch all users
-
-## Wallet Module
-
-- Automatic wallet creation
-- Fetch wallet by user ID
-- Deposit money
-- Withdraw money
-- Balance validation
-
-## Transaction Module
-
-- Transfer money between users
-- Transaction history by user
-- Fetch transaction by ID
-- Unique transaction reference numbers
-- Transaction status tracking
-- Transaction type tracking
-- Idempotent transfer requests
-
-## Audit Log Module
-
-- Kafka-based event consumption
-- Wallet event tracking
-- Deposit audit logs
-- Withdrawal audit logs
-- Transfer audit logs
-- Transaction event persistence
-- Event timestamps
-
-## Search Module
-
-- Elasticsearch transaction indexing
-- Transaction search by transaction type
-- Indexed deposit transactions
-- Indexed withdrawal transactions
-- Indexed transfer transactions
-- Direct Elasticsearch verification using the wallet-transactions index
-
-## Security Features
-
-- Keycloak OAuth2 authentication
-- JWT-based authorization
-- Role-based secured APIs
-- Stateless authentication
-
-## Platform Features
-
-- Redis wallet caching
-- Kafka event publishing
-- Kafka event consumption
-- Audit logging system
-- Elasticsearch transaction search
-- Global exception handling
-- Request validation
-- DTO-based architecture
-- Layered service architecture
-- PostgreSQL persistence
-- Dockerized development setup
-
----
-
-# Planned Enterprise Features
-
-The project roadmap includes:
-
-- Kibana dashboard for Elasticsearch data
-- Netflix Conductor workflows
-- Jenkins CI/CD pipeline
-- Kubernetes deployment
-- Prometheus monitoring
-- Grafana dashboards
-- Distributed tracing
-- Rate limiting
-- Saga orchestration
-- Event sourcing
+* Swagger/OpenAPI
 
 ---
 
@@ -149,9 +158,9 @@ The project roadmap includes:
 ```mermaid
 flowchart TD
 
-    Client[Client / Postman / Swagger]
+    Client[Client / Swagger / Postman]
 
-    Client --> Keycloak[Keycloak Authentication]
+    Client --> Keycloak[Keycloak OAuth2 Authentication]
 
     Keycloak --> SpringBoot[Spring Boot API]
 
@@ -170,264 +179,137 @@ flowchart TD
     SpringBoot --> Elasticsearch[(Elasticsearch)]
 
     Elasticsearch --> SearchAPI[Transaction Search API]
+
+    SpringBoot --> Prometheus[Prometheus Metrics]
+
+    Prometheus --> Grafana[Grafana Dashboards]
 ```
 
 ---
 
-# Kafka Event Flow
+# Monitoring Architecture
 
 ```mermaid
-sequenceDiagram
+flowchart LR
 
-    participant Client
-    participant WalletService
-    participant KafkaProducer
-    participant Kafka
-    participant AuditConsumer
-    participant PostgreSQL
+    SpringBoot[Spring Boot Application]
+    SpringBoot --> Actuator[Spring Boot Actuator]
 
-    Client->>WalletService: Deposit / Withdraw / Transfer Request
+    Actuator --> Prometheus[Prometheus]
 
-    WalletService->>PostgreSQL: Update Wallet and Save Transaction
-
-    WalletService->>KafkaProducer: Publish WalletEvent
-
-    KafkaProducer->>Kafka: Send Event
-
-    Kafka->>AuditConsumer: Consume Event
-
-    AuditConsumer->>PostgreSQL: Save Audit Log
+    Prometheus --> Grafana[Grafana Dashboard]
 ```
-
----
-
-# Elasticsearch Indexing Flow
-
-```mermaid
-sequenceDiagram
-
-    participant Client
-    participant WalletService
-    participant TransactionRepository
-    participant ElasticsearchService
-    participant Elasticsearch
-
-    Client->>WalletService: Deposit / Withdraw / Transfer Request
-
-    WalletService->>TransactionRepository: Save Wallet Transaction
-
-    WalletService->>ElasticsearchService: Index Transaction
-
-    ElasticsearchService->>Elasticsearch: Save Transaction Search Document
-
-    Client->>ElasticsearchService: Search Transactions
-
-    ElasticsearchService->>Elasticsearch: Query Indexed Transactions
-```
-
----
-
-# High-Level Transaction Flow
-
-```mermaid
-sequenceDiagram
-
-    participant Client
-    participant TransactionController
-    participant TransactionService
-    participant WalletRepository
-    participant TransactionRepository
-    participant PostgreSQL
-
-    Client->>TransactionController: Transfer Request
-
-    TransactionController->>TransactionService: Validate Request
-
-    TransactionService->>WalletRepository: Load Sender Wallet
-    TransactionService->>WalletRepository: Load Receiver Wallet
-
-    TransactionService->>WalletRepository: Debit Sender
-    TransactionService->>WalletRepository: Credit Receiver
-
-    TransactionService->>TransactionRepository: Save Transaction
-
-    WalletRepository->>PostgreSQL: Persist Wallet Updates
-    TransactionRepository->>PostgreSQL: Persist Transaction
-
-    TransactionService-->>TransactionController: Transaction Response
-    TransactionController-->>Client: Success Response
-```
-
----
-
-# Project Structure
-
-```text
-src/main/java/com/example/enterprise_digital_wallet
-│
-├── config
-│
-├── controller
-│   ├── HealthController
-│   ├── UserController
-│   ├── WalletController
-│   ├── TransactionController
-│   ├── AuditLogController
-│   └── TransactionSearchController
-│
-├── dto
-│
-├── entity
-│
-├── event
-│
-├── exception
-│
-├── repository
-│
-├── search
-│
-├── service
-│
-└── EnterpriseDigitalWalletApplication
-```
-
----
-
-# Database Design
-
-## Users Table
-
-```text
-users
-├── id
-├── full_name
-├── email
-├── phone_number
-├── status
-├── created_at
-├── updated_at
-```
-
-## Wallets Table
-
-```text
-wallets
-├── id
-├── user_id
-├── balance
-├── currency
-├── created_at
-```
-
-## Wallet Transactions Table
-
-```text
-wallet_transactions
-├── id
-├── sender_wallet_id
-├── receiver_wallet_id
-├── amount
-├── currency
-├── transaction_type
-├── status
-├── reference_number
-├── idempotency_key
-├── created_at
-```
-
-## Audit Logs Table
-
-```text
-audit_logs
-├── id
-├── event_type
-├── transaction_id
-├── sender_user_id
-├── receiver_user_id
-├── amount
-├── currency
-├── reference_number
-├── occurred_at
-├── consumed_at
-```
-
----
-
-# Elasticsearch Design
-
-## Index
-
-```text
-wallet-transactions
-```
-
-## Indexed Transaction Document
-
-```text
-wallet-transactions
-├── id
-├── transaction_id
-├── sender_user_id
-├── receiver_user_id
-├── amount
-├── currency
-├── transaction_type
-├── status
-├── reference_number
-├── created_at
-```
-
-Elasticsearch is used to support transaction search and fast filtering without relying only on PostgreSQL queries.
 
 ---
 
 # Security
 
-The platform uses Keycloak OAuth2 authentication with JWT Bearer tokens.
+The platform uses OAuth2 Resource Server security with JWT Bearer tokens issued by Keycloak.
 
-## Features
+## Security Features
 
-- OAuth2 Resource Server
-- JWT validation
-- Role-based authorization
-- Secure REST APIs
-- Stateless authentication
+* JWT authentication
+* OAuth2 authorization
+* Role-based API access
+* Stateless security
+* Secure REST APIs
+* Protected Actuator endpoints
 
 ## Roles
 
-- ADMIN
-- USER
+* ADMIN
+* USER
+
+---
+
+# Rate Limiting
+
+The platform implements Redis-backed rate limiting to prevent API abuse.
+
+## Features
+
+* Per-client request limiting
+* Redis-based distributed storage
+* HTTP 429 protection
+* API throttling
+* Monitoring integration
+
+---
+
+# Monitoring And Metrics
+
+The platform exposes production-grade metrics using Spring Boot Actuator and Prometheus.
+
+## Metrics Included
+
+### JVM Metrics
+
+* Heap memory
+* GC activity
+* Thread usage
+* CPU usage
+
+### HTTP Metrics
+
+* Request counts
+* Status codes
+* Request latency
+* Error tracking
+
+### Database Metrics
+
+* HikariCP pool metrics
+* Active connections
+* Idle connections
+
+### Security Metrics
+
+* Authentication success/failure
+* Authorization metrics
+* Bearer token validation
+
+### Kafka Metrics
+
+* Kafka producer metrics
+* Kafka listener metrics
+
+### Rate Limiting Metrics
+
+* Blocked requests
+* HTTP 429 tracking
+
+---
+
+# Grafana Dashboards
+
+The project includes Grafana dashboards for:
+
+* JVM monitoring
+* API monitoring
+* Security monitoring
+* Database monitoring
+* Request metrics
+* Rate limiting metrics
 
 ---
 
 # REST API Overview
 
-# Health APIs
+## User APIs
 
-## Check Application Health
-
-```http
-GET /api/v1/health
-```
-
----
-
-# User APIs
-
-## Create User
+### Create User
 
 ```http
 POST /api/v1/users
 ```
 
-## Get All Users
+### Get All Users
 
 ```http
 GET /api/v1/users
 ```
 
-## Get User By ID
+### Get User By ID
 
 ```http
 GET /api/v1/users/{userId}
@@ -435,21 +317,21 @@ GET /api/v1/users/{userId}
 
 ---
 
-# Wallet APIs
+## Wallet APIs
 
-## Get Wallet By User ID
+### Get Wallet By User ID
 
 ```http
 GET /api/v1/wallets/users/{userId}
 ```
 
-## Deposit Money
+### Deposit Money
 
 ```http
 POST /api/v1/wallets/users/{userId}/deposit
 ```
 
-## Withdraw Money
+### Withdraw Money
 
 ```http
 POST /api/v1/wallets/users/{userId}/withdraw
@@ -457,21 +339,21 @@ POST /api/v1/wallets/users/{userId}/withdraw
 
 ---
 
-# Transaction APIs
+## Transaction APIs
 
-## Transfer Money
+### Transfer Money
 
 ```http
 POST /api/v1/transactions/transfer
 ```
 
-## Get Transaction History By User
+### Get Transaction History
 
 ```http
 GET /api/v1/transactions/users/{userId}
 ```
 
-## Get Transaction By ID
+### Get Transaction By ID
 
 ```http
 GET /api/v1/transactions/{transactionId}
@@ -479,9 +361,37 @@ GET /api/v1/transactions/{transactionId}
 
 ---
 
-# Audit Log APIs
+## Search APIs
 
-## Get All Audit Logs
+### Search By Transaction Type
+
+```http
+GET /api/v1/search/transactions/type/{transactionType}
+```
+
+### Search By Status
+
+```http
+GET /api/v1/search/transactions/status/{status}
+```
+
+### Search By Reference Number
+
+```http
+GET /api/v1/search/transactions/reference/{referenceNumber}
+```
+
+### Search By Amount Range
+
+```http
+GET /api/v1/search/transactions/amount?minAmount=1&maxAmount=1000
+```
+
+---
+
+## Audit APIs
+
+### Get Audit Logs
 
 ```http
 GET /api/v1/audit-logs
@@ -489,27 +399,54 @@ GET /api/v1/audit-logs
 
 ---
 
-# Search APIs
+## Monitoring APIs
 
-## Search Transactions By Type
+### Health Check
 
 ```http
-GET /api/v1/search/transactions/type/{transactionType}
+GET /actuator/health
 ```
 
-Example transaction types:
+### Metrics
+
+```http
+GET /actuator/metrics
+```
+
+### Prometheus Metrics
+
+```http
+GET /actuator/prometheus
+```
+
+---
+
+# Postman Collection
+
+The complete Postman collection for all APIs is included in the project root folder.
+
+Import the following file into Postman:
 
 ```text
-DEPOSIT
-WITHDRAWAL
-TRANSFER
+enterprise-digital-wallet.postman_collection.json
 ```
+
+The collection includes:
+
+* Authentication APIs
+* User APIs
+* Wallet APIs
+* Transaction APIs
+* Search APIs
+* Audit APIs
+* Monitoring APIs
+* Prometheus APIs
 
 ---
 
 # Example API Requests
 
-# Generate Access Token
+## Generate JWT Access Token
 
 ```bash
 curl -X POST "http://localhost:8081/realms/wallet-realm/protocol/openid-connect/token" \
@@ -522,7 +459,7 @@ curl -X POST "http://localhost:8081/realms/wallet-realm/protocol/openid-connect/
 
 ---
 
-# Create User
+## Create User
 
 ```bash
 curl -X POST "http://localhost:8080/api/v1/users" \
@@ -537,7 +474,7 @@ curl -X POST "http://localhost:8080/api/v1/users" \
 
 ---
 
-# Deposit Money
+## Deposit Money
 
 ```bash
 curl -X POST "http://localhost:8080/api/v1/wallets/users/{userId}/deposit" \
@@ -550,20 +487,7 @@ curl -X POST "http://localhost:8080/api/v1/wallets/users/{userId}/deposit" \
 
 ---
 
-# Withdraw Money
-
-```bash
-curl -X POST "http://localhost:8080/api/v1/wallets/users/{userId}/withdraw" \
-  -H "Authorization: Bearer ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-        "amount":50.00
-      }'
-```
-
----
-
-# Transfer Money
+## Transfer Money
 
 ```bash
 curl -X POST "http://localhost:8080/api/v1/transactions/transfer" \
@@ -579,87 +503,9 @@ curl -X POST "http://localhost:8080/api/v1/transactions/transfer" \
 
 ---
 
-# Get Audit Logs
-
-```bash
-curl -X GET "http://localhost:8080/api/v1/audit-logs" \
-  -H "Authorization: Bearer ACCESS_TOKEN"
-```
-
----
-
-# Search Transactions By Type
-
-```bash
-curl -X GET "http://localhost:8080/api/v1/search/transactions/type/DEPOSIT" \
-  -H "Authorization: Bearer ACCESS_TOKEN"
-```
-
----
-
-# Direct Elasticsearch Verification
-
-```bash
-curl "http://localhost:9200/wallet-transactions/_search?pretty"
-```
-
----
-
-# Redis Caching
-
-Redis is used for wallet-level caching to reduce repeated database reads.
-
-## Cached Operations
-
-- Fetch wallet by user ID
-
-## Cache Eviction
-
-Wallet cache is automatically invalidated on:
-
-- Deposit
-- Withdrawal
-- Money transfer
-
----
-
-# Kafka Event-Driven Audit Logging
-
-Kafka is used to publish wallet transaction events.
-
-## Published Events
-
-- MONEY_DEPOSITED
-- MONEY_WITHDRAWN
-- MONEY_TRANSFERRED
-
-## Consumer Responsibility
-
-The Kafka consumer listens to wallet events and persists them as audit logs in PostgreSQL.
-
----
-
-# Elasticsearch Transaction Search
-
-Elasticsearch is used to index transaction data for search use cases.
-
-## Indexed Transactions
-
-- Deposits
-- Withdrawals
-- Transfers
-
-## Search Use Cases
-
-- Search by transaction type
-- Inspect indexed transactions directly
-- Prepare for future filtering by amount, status, user ID, reference number, and date range
-
----
-
 # Local Development Setup
 
-# 1. Clone Repository
+## 1. Clone Repository
 
 ```bash
 git clone <repository-url>
@@ -668,13 +514,13 @@ cd enterprise-digital-wallet
 
 ---
 
-# 2. Start Infrastructure
+## 2. Start Infrastructure
 
 ```bash
 docker compose up -d
 ```
 
-Verify running containers:
+Verify containers:
 
 ```bash
 docker ps
@@ -682,41 +528,18 @@ docker ps
 
 ---
 
-# 3. Run Spring Boot Application
+## 3. Run Spring Boot Application
 
-## Linux / Mac
+### Linux / Mac
 
 ```bash
 ./mvnw spring-boot:run
 ```
 
-## Windows PowerShell
+### Windows PowerShell
 
 ```powershell
 .\mvnw spring-boot:run
-```
-
----
-
-# Keycloak Setup
-
-Keycloak runs on:
-
-```text
-http://localhost:8081
-```
-
-## Realm
-
-```text
-wallet-realm
-```
-
-## Test User
-
-```text
-username: walletadmin
-password: password
 ```
 
 ---
@@ -741,6 +564,18 @@ http://localhost:8080/swagger-ui/index.html
 http://localhost:8080/v3/api-docs
 ```
 
+## Prometheus
+
+```text
+http://localhost:9090
+```
+
+## Grafana
+
+```text
+http://localhost:3000
+```
+
 ## Keycloak
 
 ```text
@@ -755,67 +590,54 @@ http://localhost:9200
 
 ---
 
-# Database Configuration
+# Keycloak Setup
 
-```properties
-spring.datasource.url=jdbc:postgresql://localhost:5433/wallet_db
-spring.datasource.username=wallet_user
-spring.datasource.password=wallet_password
+## Realm
+
+```text
+wallet-realm
+```
+
+## Test User
+
+```text
+username: walletadmin
+password: password
 ```
 
 ---
 
-# Elasticsearch Configuration
+# Project Structure
 
-```properties
-spring.elasticsearch.uris=http://localhost:9200
+```text
+src/main/java/com/example/enterprise_digital_wallet
+│
+├── config
+├── controller
+├── dto
+├── entity
+├── event
+├── exception
+├── repository
+├── search
+├── service
+└── EnterpriseDigitalWalletApplication
 ```
-
----
-
-# Exception Handling
-
-The application uses centralized global exception handling for:
-
-- Validation failures
-- Resource not found errors
-- Insufficient balance errors
-- Invalid transaction errors
-- Authentication errors
-- Internal server errors
-
----
-
-# Validation Rules
-
-## User Validation
-
-- Email must be unique
-- Phone number must be unique
-- Full name cannot be blank
-
-## Transaction Validation
-
-- Amount must be greater than zero
-- Sender and receiver cannot be same
-- Sender must have sufficient balance
-- Idempotency key should be unique for transfer requests
 
 ---
 
 # Design Principles Used
 
-- Layered architecture
-- DTO pattern
-- Separation of concerns
-- Transactional consistency
-- Repository pattern
-- RESTful API design
-- Exception-driven validation
-- Event-driven architecture
-- Search indexing
-- Cache-aside pattern
-- Production-style entity modeling
+* Layered architecture
+* DTO pattern
+* Separation of concerns
+* Transactional consistency
+* Event-driven architecture
+* Repository pattern
+* RESTful API design
+* Cache-aside pattern
+* Search indexing
+* Production-style entity modeling
 
 ---
 
@@ -823,32 +645,36 @@ The application uses centralized global exception handling for:
 
 ## Distributed Systems
 
-- Saga orchestration
-- Event sourcing
-- Distributed tracing
-
-## Observability
-
-- Prometheus metrics
-- Grafana dashboards
-- Centralized logging
-- Health monitoring
+* Saga orchestration
+* Event sourcing
+* Distributed tracing
 
 ## DevOps
 
-- Jenkins CI/CD pipeline
-- Kubernetes deployment
-- Helm charts
-- Docker image optimization
+* CI/CD pipelines
+* Kubernetes deployment
+* Helm charts
+* Docker image optimization
 
-## Search And Analytics
+## Observability
 
-- Kibana dashboard
-- Search by transaction status
-- Search by user ID
-- Search by reference number
-- Date range filtering
-- Amount range filtering
+* Centralized logging
+* Alerting systems
+* Distributed tracing dashboards
+
+---
+
+# Screenshots
+
+Add screenshots here:
+
+```text
+docs/screenshots/swagger-ui.png
+docs/screenshots/grafana-dashboard.png
+docs/screenshots/prometheus-metrics.png
+docs/screenshots/keycloak.png
+docs/screenshots/postman-collection.png
+```
 
 ---
 
@@ -856,6 +682,6 @@ The application uses centralized global exception handling for:
 
 Siddhant Sharma
 
-- MSc Information Technology
-- University of Stuttgart
-- Backend Software Engineer with 2+ years of industry experience
+* MSc Information Technology
+* University of Stuttgart
+* Backend Software Engineer with 2+ years of industry experience

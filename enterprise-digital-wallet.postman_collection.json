@@ -1,0 +1,275 @@
+{
+  "info": {
+    "name": "Enterprise Digital Wallet APIs",
+    "description": "Postman collection for Enterprise Digital Wallet Platform",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "keycloakUrl", "value": "http://localhost:8081" },
+    { "key": "realm", "value": "wallet-realm" },
+    { "key": "clientId", "value": "wallet-api" },
+    { "key": "username", "value": "walletadmin" },
+    { "key": "password", "value": "password" },
+    { "key": "accessToken", "value": "" },
+    { "key": "user1Id", "value": "" },
+    { "key": "user2Id", "value": "" },
+    { "key": "transactionId", "value": "" },
+    { "key": "referenceNumber", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "01 Generate Admin Token",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const jsonData = pm.response.json();",
+              "pm.collectionVariables.set('accessToken', jsonData.access_token);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/x-www-form-urlencoded" }
+        ],
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            { "key": "client_id", "value": "{{clientId}}", "type": "text" },
+            { "key": "username", "value": "{{username}}", "type": "text" },
+            { "key": "password", "value": "{{password}}", "type": "text" },
+            { "key": "grant_type", "value": "password", "type": "text" }
+          ]
+        },
+        "url": "{{keycloakUrl}}/realms/{{realm}}/protocol/openid-connect/token"
+      }
+    },
+    {
+      "name": "02 Create User 1",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const jsonData = pm.response.json();",
+              "if (jsonData.data && jsonData.data.id) {",
+              "  pm.collectionVariables.set('user1Id', jsonData.data.id);",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"fullName\": \"Test User One\",\n  \"email\": \"testuser1@example.com\",\n  \"phoneNumber\": \"+491111111111\"\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/users"
+      }
+    },
+    {
+      "name": "03 Create User 2",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const jsonData = pm.response.json();",
+              "if (jsonData.data && jsonData.data.id) {",
+              "  pm.collectionVariables.set('user2Id', jsonData.data.id);",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"fullName\": \"Test User Two\",\n  \"email\": \"testuser2@example.com\",\n  \"phoneNumber\": \"+492222222222\"\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/users"
+      }
+    },
+    {
+      "name": "04 Get All Users",
+      "request": {
+        "method": "GET",
+        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+        "url": "{{baseUrl}}/api/v1/users"
+      }
+    },
+    {
+      "name": "05 Get Wallet User 1",
+      "request": {
+        "method": "GET",
+        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+        "url": "{{baseUrl}}/api/v1/wallets/users/{{user1Id}}"
+      }
+    },
+    {
+      "name": "06 Deposit User 1",
+      "request": {
+        "method": "POST",
+        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"amount\": 1000\n}" },
+        "url": "{{baseUrl}}/api/v1/wallets/users/{{user1Id}}/deposit"
+      }
+    },
+    {
+      "name": "07 Deposit User 2",
+      "request": {
+        "method": "POST",
+        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"amount\": 500\n}" },
+        "url": "{{baseUrl}}/api/v1/wallets/users/{{user2Id}}/deposit"
+      }
+    },
+    {
+      "name": "08 Withdraw User 1",
+      "request": {
+        "method": "POST",
+        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"amount\": 100\n}" },
+        "url": "{{baseUrl}}/api/v1/wallets/users/{{user1Id}}/withdraw"
+      }
+    },
+    {
+      "name": "09 Transfer User 1 To User 2",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const jsonData = pm.response.json();",
+              "if (jsonData.data) {",
+              "  pm.collectionVariables.set('transactionId', jsonData.data.id);",
+              "  pm.collectionVariables.set('referenceNumber', jsonData.data.referenceNumber);",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"senderUserId\": \"{{user1Id}}\",\n  \"receiverUserId\": \"{{user2Id}}\",\n  \"amount\": 150,\n  \"idempotencyKey\": \"postman-transfer-001\"\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/transactions/transfer"
+      }
+    },
+    {
+      "name": "10 Get Transaction History User 1",
+      "request": {
+        "method": "GET",
+        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+        "url": "{{baseUrl}}/api/v1/transactions/users/{{user1Id}}?page=0&size=10&sortBy=createdAt&direction=desc"
+      }
+    },
+    {
+      "name": "11 Get Transaction By ID",
+      "request": {
+        "method": "GET",
+        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+        "url": "{{baseUrl}}/api/v1/transactions/{{transactionId}}"
+      }
+    },
+    {
+      "name": "12 Search Transactions By User",
+      "request": {
+        "method": "GET",
+        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+        "url": "{{baseUrl}}/api/v1/search/transactions/users/{{user1Id}}"
+      }
+    },
+    {
+      "name": "13 Search Transactions By Reference",
+      "request": {
+        "method": "GET",
+        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+        "url": "{{baseUrl}}/api/v1/search/transactions/reference/{{referenceNumber}}"
+      }
+    },
+    {
+      "name": "14 Search Transactions By Type",
+      "request": {
+        "method": "GET",
+        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+        "url": "{{baseUrl}}/api/v1/search/transactions/type/TRANSFER"
+      }
+    },
+    {
+      "name": "15 Search Transactions By Status",
+      "request": {
+        "method": "GET",
+        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+        "url": "{{baseUrl}}/api/v1/search/transactions/status/SUCCESS"
+      }
+    },
+    {
+      "name": "16 Search Transactions By Amount Range",
+      "request": {
+        "method": "GET",
+        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+        "url": "{{baseUrl}}/api/v1/search/transactions/amount?minAmount=1&maxAmount=10000"
+      }
+    },
+    {
+      "name": "17 Get Audit Logs",
+      "request": {
+        "method": "GET",
+        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+        "url": "{{baseUrl}}/api/v1/audit-logs"
+      }
+    },
+    {
+      "name": "18 Actuator Health",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/actuator/health"
+      }
+    },
+    {
+      "name": "19 Actuator Info",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/actuator/info"
+      }
+    },
+    {
+      "name": "20 Actuator Metrics",
+      "request": {
+        "method": "GET",
+        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+        "url": "{{baseUrl}}/actuator/metrics"
+      }
+    },
+    {
+      "name": "21 Prometheus Metrics",
+      "request": {
+        "method": "GET",
+        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+        "url": "{{baseUrl}}/actuator/prometheus"
+      }
+    }
+  ]
+}
