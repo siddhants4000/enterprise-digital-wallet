@@ -1,8 +1,8 @@
 namespace: wallet
 
 walletApi:
-  image: enterprise-wallet-app:latest
-  imagePullPolicy: Never
+  image: siddhants4000/enterprise-wallet-app:latest
+  imagePullPolicy: Always
   replicas: 1
   service:
     type: NodePort
