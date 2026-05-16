@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wallet-api
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: {{ .Values.walletApi.replicas }}
+  selector:
+    matchLabels:
+      app: wallet-api
+  template:
+    metadata:
+      labels:
+        app: wallet-api
+    spec:
+      containers:
+        - name: wallet-api
+          image: {{ .Values.walletApi.image }}
+          imagePullPolicy: {{ .Values.walletApi.imagePullPolicy }}
+          ports:
+            - containerPort: 8080
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              echo "Waiting for Elasticsearch...";
+              sleep 90;
+              java -jar /app/app.jar \
+                --spring.profiles.active=docker \
+                --spring.kafka.bootstrap-servers=kafka:9092 \
+                --spring.elasticsearch.uris=http://elasticsearch:9200 \
+                --spring.data.redis.host=redis \
+                --spring.datasource.url=jdbc:postgresql://postgres:5432/{{ .Values.postgres.database }}
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:postgresql://postgres:5432/{{ .Values.postgres.database }}
+            - name: SPRING_DATASOURCE_USERNAME
+              value: {{ .Values.postgres.username }}
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: {{ .Values.postgres.password }}
+            - name: SPRING_DATA_REDIS_HOST
+              value: redis
+            - name: SPRING_ELASTICSEARCH_URIS
+              value: http://elasticsearch:9200
+            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+              value: kafka:9092
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wallet-api
+  namespace: {{ .Values.namespace }}
+spec:
+  type: {{ .Values.walletApi.service.type }}
+  selector:
+    app: wallet-api
+  ports:
+    - port: {{ .Values.walletApi.service.port }}
+      targetPort: 8080
+      nodePort: {{ .Values.walletApi.service.nodePort }}

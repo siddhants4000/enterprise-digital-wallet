@@ -1,0 +1,27 @@
+namespace: wallet
+
+walletApi:
+  image: enterprise-wallet-app:latest
+  imagePullPolicy: Never
+  replicas: 1
+  service:
+    type: NodePort
+    port: 8080
+    nodePort: 30080
+
+postgres:
+  image: postgres:16
+  database: wallet_db
+  username: wallet_user
+  password: wallet_password
+  storage: 1Gi
+
+redis:
+  image: redis:7
+
+elasticsearch:
+  image: docker.elastic.co/elasticsearch/elasticsearch:9.2.0
+  heapSize: "-Xms512m -Xmx512m"
+
+kafka:
+  image: apache/kafka:3.7.1
