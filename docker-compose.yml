@@ -102,6 +102,27 @@ services:
     depends_on:
       - prometheus
 
+  wallet-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: wallet_api
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+      kafka:
+        condition: service_started
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+
 volumes:
   elasticsearch_data:
   grafana_data:
