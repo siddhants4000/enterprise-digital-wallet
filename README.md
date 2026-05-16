@@ -858,3 +858,216 @@ Siddhant Sharma
 - MSc Information Technology
 - University of Stuttgart
 - Backend Software Engineer with 2+ years of industry experience
+
+
+---
+
+# Kubernetes Deployment
+
+The platform supports Kubernetes-based deployment using Docker Desktop Kubernetes or any Kubernetes cluster.
+
+## Kubernetes Components
+
+- PostgreSQL Deployment and Service
+- Redis Deployment and Service
+- Elasticsearch Deployment and Service
+- Kafka Deployment and Service
+- Wallet API Deployment and Service
+
+## Verify Kubernetes Resources
+
+```powershell
+kubectl get all -n wallet
+```
+
+## Access Wallet API
+
+```text
+http://localhost:30080
+```
+
+---
+
+# Helm Deployment
+
+The project includes Helm charts for simplified Kubernetes deployment and release management.
+
+## Helm Features
+
+- Parameterized deployments
+- Reusable Kubernetes templates
+- Environment-based configuration
+- Centralized values.yaml configuration
+
+## Helm Commands
+
+### Install Helm Release
+
+```powershell
+helm install wallet-platform ./helm/wallet-platform -n wallet
+```
+
+### Upgrade Helm Release
+
+```powershell
+helm upgrade wallet-platform ./helm/wallet-platform -n wallet
+```
+
+### Uninstall Helm Release
+
+```powershell
+helm uninstall wallet-platform -n wallet
+```
+
+## Verify Helm Release
+
+```powershell
+helm list -n wallet
+```
+
+---
+
+# Terraform Infrastructure Provisioning
+
+The project supports Infrastructure as Code (IaC) using Terraform.
+
+Terraform provisions:
+
+- Kubernetes namespace
+- Helm deployment for the wallet platform
+
+## Terraform Commands
+
+```powershell
+cd terraform
+
+terraform init
+terraform plan
+terraform apply
+```
+
+## Verify Terraform Deployment
+
+```powershell
+kubectl get pods -n wallet
+
+helm list -n wallet
+```
+
+## Destroy Infrastructure
+
+```powershell
+terraform destroy
+```
+
+---
+
+# CI/CD Pipeline
+
+The project includes GitHub Actions based CI/CD automation.
+
+## CI/CD Features
+
+- Maven build validation
+- Docker image build validation
+- Helm chart linting
+- Helm template rendering
+- Automated GitHub workflow execution
+
+## GitHub Actions Workflow
+
+Location:
+
+```text
+.github/workflows/build.yml
+```
+
+## CI Pipeline Steps
+
+- Checkout repository
+- Setup Java 21
+- Build Spring Boot application
+- Build Docker image
+- Validate Helm charts
+- Render Helm templates
+
+---
+
+# Monitoring And Observability
+
+The platform supports production-style monitoring using Prometheus and Grafana.
+
+## Monitoring Features
+
+- Spring Boot Actuator metrics
+- Prometheus metrics scraping
+- Grafana dashboards
+- JVM monitoring
+- HTTP request monitoring
+- API response monitoring
+
+## Monitoring Stack
+
+- Prometheus
+- Grafana
+- Spring Boot Actuator
+- Micrometer
+
+---
+
+# Postman Collection
+
+The project includes a Postman collection for API testing.
+
+Location:
+
+```text
+Project Root Folder
+```
+
+The Postman collection contains:
+
+- Authentication APIs
+- User APIs
+- Wallet APIs
+- Transaction APIs
+- Audit Log APIs
+- Search APIs
+
+---
+
+# Complete Deployment Flow
+
+## Local Development
+
+```powershell
+docker compose up -d
+.\mvnw spring-boot:run
+```
+
+## Docker Deployment
+
+```powershell
+docker build -t enterprise-wallet-app .
+docker run -p 8080:8080 enterprise-wallet-app
+```
+
+## Kubernetes Deployment
+
+```powershell
+kubectl apply -f k8s/
+```
+
+## Helm Deployment
+
+```powershell
+helm install wallet-platform ./helm/wallet-platform -n wallet
+```
+
+## Terraform Deployment
+
+```powershell
+cd terraform
+terraform init
+terraform apply
+```
