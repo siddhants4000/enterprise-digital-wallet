@@ -851,6 +851,247 @@ The application uses centralized global exception handling for:
 
 ---
 
+
+---
+
+# Production Cloud Deployment
+
+The platform is fully deployed on a Google Cloud VM using Docker Compose and production-style infrastructure tooling.
+
+## Live Cloud Services
+
+| Service | URL |
+|---|---|
+| Backend API | http://34.89.205.246:8080 |
+| Swagger UI | http://34.89.205.246:8080/swagger-ui/index.html |
+| Prometheus | http://34.89.205.246:9090 |
+| Grafana | http://34.89.205.246:3000 |
+
+---
+
+# Cloud Infrastructure Stack
+
+The cloud deployment includes:
+
+- Google Cloud Compute Engine VM
+- Docker Engine
+- Docker Compose
+- Spring Boot API
+- PostgreSQL
+- Redis
+- Apache Kafka
+- Elasticsearch
+- Keycloak
+- Prometheus
+- Grafana
+
+---
+
+# Monitoring And Observability Dashboard
+
+The platform includes production-style observability using:
+
+- Spring Boot Actuator
+- Micrometer
+- Prometheus
+- Grafana
+
+## Monitored Metrics
+
+- JVM memory usage
+- CPU usage
+- HTTP request metrics
+- HTTP status codes
+- Active database connections
+- JVM thread monitoring
+- System-level resource monitoring
+
+---
+
+# Deployment Screenshots
+
+## Grafana Dashboard
+
+![Grafana Dashboard](screenshots/grafana-dashboard.png)
+
+---
+
+## Prometheus Metrics
+
+![Prometheus Metrics](screenshots/prometheus-metrics.png)
+
+---
+
+## Keycloak Authentication
+
+![Keycloak Authentication](screenshots/keycloak-token.png)
+
+---
+
+## Swagger API Documentation
+
+![Swagger UI](screenshots/swagger-ui.png)
+
+---
+
+# Google Cloud VM Setup
+
+## Install Docker
+
+```bash
+sudo apt update
+
+sudo apt install -y docker.io docker-compose git
+
+sudo systemctl enable docker
+sudo systemctl start docker
+
+sudo usermod -aG docker $USER
+newgrp docker
+```
+
+---
+
+## Clone Repository
+
+```bash
+git clone https://github.com/siddhants4000/enterprise-digital-wallet.git
+
+cd enterprise-digital-wallet
+```
+
+---
+
+## Start Complete Infrastructure
+
+```bash
+docker compose up -d
+```
+
+---
+
+## Start Wallet API
+
+```bash
+docker compose up -d wallet-api
+```
+
+---
+
+## Verify Running Containers
+
+```bash
+docker ps
+```
+
+---
+
+## Verify Health Endpoint
+
+```bash
+curl http://localhost:8080/actuator/health
+```
+
+---
+
+## Verify Prometheus Metrics
+
+```bash
+curl http://localhost:8080/actuator/prometheus
+```
+
+---
+
+# Public API Testing
+
+## Generate Access Token
+
+```bash
+curl -X POST "http://localhost:8081/realms/wallet-realm/protocol/openid-connect/token" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "client_id=wallet-api" \
+  -d "grant_type=password" \
+  -d "username=walletadmin" \
+  -d "password=password"
+```
+
+---
+
+## Example Authenticated API Call
+
+```bash
+curl -X GET "http://34.89.205.246:8080/api/v1/users" \
+  -H "Authorization: Bearer ACCESS_TOKEN"
+```
+
+---
+
+# Kubernetes Deployment Verification
+
+## Verify Pods
+
+```powershell
+kubectl get pods -n wallet
+```
+
+## Verify Services
+
+```powershell
+kubectl get svc -n wallet
+```
+
+## Verify Helm Release
+
+```powershell
+helm list -n wallet
+```
+
+---
+
+# Grafana Dashboard Features
+
+The Grafana dashboard visualizes:
+
+- Application CPU usage
+- JVM heap and non-heap memory
+- HTTP response codes
+- Database connection pool metrics
+- JVM thread activity
+- System CPU usage
+- API traffic patterns
+
+---
+
+# CI/CD And Automation
+
+The project includes:
+
+- GitHub Actions CI pipeline
+- Dockerized deployment workflow
+- Helm-based Kubernetes deployment
+- Terraform infrastructure provisioning
+- Monitoring and observability setup
+
+---
+
+# Enterprise Engineering Concepts Demonstrated
+
+This project demonstrates:
+
+- Enterprise Spring Boot architecture
+- Event-driven architecture using Kafka
+- Redis caching strategies
+- Elasticsearch indexing and search
+- OAuth2 authentication with Keycloak
+- Docker containerization
+- Kubernetes orchestration
+- Helm package management
+- Terraform Infrastructure as Code
+- Prometheus metrics scraping
+- Grafana dashboard visualization
+- Production-style deployment workflows
+
+
 # Author
 
 Siddhant Sharma
