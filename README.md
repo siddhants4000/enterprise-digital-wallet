@@ -924,7 +924,7 @@ The platform includes production-style observability using:
 
 ## Keycloak Authentication
 
-![Keycloak Authentication](screenshots/keycloak-token.png)
+![Keycloak Authentication](screenshots/google-cloud-console.png)
 
 ---
 
